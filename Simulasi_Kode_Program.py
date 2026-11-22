@@ -274,3 +274,124 @@ def tampilkan_tabel(judul, nama_pulau, daftar, fungsi_hitung, judul_persen, jeni
     print(garis)
     print(format_baris(baris_tabel[-1], total=True))
     print(garis)
+
+DAFTAR_MENU = {
+    "1": {
+        "judul": "Memilih sekolah dasar",
+        "ikon": "🏫",
+        "manfaat": "Pilih wilayah dengan kelas & guru terbaik",
+        "pertanyaan": "Pilih kategori berdasarkan kualitas",
+        "kategori": [
+            {"nama": "Kelayakan kelas", "judul_tabel": "Kualitas kelas",
+             "fungsi": hitung_persentase_kelayakan_kelas,
+             "kolom_persen": "Ruang kelas baik", "jenis": "baik",
+             "ikon": "🏠", "manfaat": "Tingkat kenyamanan ruang belajar"},
+            {"nama": "Kualitas guru & tenaga pendidik", "judul_tabel": "Kualitas tenaga pendidik",
+             "fungsi": hitung_persentase_kualitas_guru_tenaga,
+             "kolom_persen": "Guru & tenaga S1/>SM", "jenis": "baik",
+             "ikon": "👩‍🏫", "manfaat": "Tingkat kualitas pengajar"},
+        ],
+    },
+    "2": {
+        "judul": "Kondisi kelayakan fasilitas",
+        "ikon": "🏗",
+        "manfaat": "Identifikasi ruang kelas yang paling membutuhkan perbaikan",
+        "pertanyaan": "Pilih kategori berdasarkan kualitas",
+        "kategori": [
+            {"nama": "Perlu perbaikan fasilitas", "judul_tabel": "Perlu perbaikan fasilitas",
+             "fungsi": hitung_persentase_fasilitas_perbaikan,
+             "kolom_persen": "Ruang kelas rusak", "jenis": "buruk",
+             "ikon": "🔧", "manfaat": "Prioritas wilayah yang harus segera diperbaiki"},
+            {"nama": "Tidak perlu perbaikan", "judul_tabel": "Tidak perlu perbaikan",
+             "fungsi": hitung_persentase_fasilitas_aman,
+             "kolom_persen": "Ruang kelas baik", "jenis": "baik",
+             "ikon": "✅", "manfaat": "Wilayah dengan fasilitas yang baik"},
+        ],
+    },
+    "3": {
+        "judul": "Pemerataan kepala sekolah & guru dan tenaga pendidik",
+        "ikon": "⚖",
+        "manfaat": "Mengecek pemerataan kualitas pengajar",
+        "pertanyaan": "Pilih kategori berdasarkan pemerataan",
+        "kategori": [
+            {"nama": "Kepala sekolah & guru", "judul_tabel": "Pemerataan kepala sekolah & guru",
+             "fungsi": lambda baris: hitung_persentase_pemerataan(
+                 baris, "Kepala Sekolah dan Guru(≥ S1)", "Kepala Sekolah dan Guru(<S1)"),
+             "kolom_persen": "Guru berpendidikan S1", "jenis": "baik",
+             "ikon": "🎓", "manfaat": "Pemerataan guru berpendidikan S1 ke atas"},
+            {"nama": "Tenaga kependidikan", "judul_tabel": "Pemerataan tenaga kependidikan",
+             "fungsi": lambda baris: hitung_persentase_pemerataan(
+                 baris, "Tenaga Kependidikan(>SM)", "Tenaga Kependidikan(SM)"),
+             "kolom_persen": "Tendik di atas SM", "jenis": "baik",
+             "ikon": "🤝", "manfaat": "Pemerataan staf pendukung sekolah"},
+        ],
+    },
+    "4": {
+        "judul": "Keberlanjutan pendidikan",
+        "ikon": "📈",
+        "manfaat": "faktor utama siswa putus sekolah dan mengulang",
+        "pertanyaan": "Pilih kategori berdasarkan faktor kegagalan",
+        "kategori": [
+            {"nama": "Putus sekolah", "judul_tabel": "Indikator dominan putus sekolah",
+             "fungsi": lambda baris: hitung_persentase_keberlanjutan(baris, "Putus Sekolah"),
+             "kolom_persen": "Putus sekolah", "jenis": "buruk", "kolom_status": "Indikator dominan",
+             "ikon": "🚸", "manfaat": "Penyebab utama anak berhenti sekolah"},
+            {"nama": "Mengulang", "judul_tabel": "Indikator dominan mengulang",
+             "fungsi": lambda baris: hitung_persentase_keberlanjutan(baris, "Mengulang"),
+             "kolom_persen": "Mengulang", "jenis": "buruk", "kolom_status": "Indikator dominan",
+             "ikon": "🔄", "manfaat": "Penyebab utama anak mengulang kelas"},
+        ],
+    },
+}
+
+def jalankan_menu(per_pulau, menu):
+    nama_pulau = pilih_pulau(per_pulau)
+
+    nomor = pilih_dari_daftar(
+        menu["pertanyaan"],
+        [k["nama"] for k in menu["kategori"]],
+        f"{menu['judul']} - Pulau {nama_pulau}",
+        [k["ikon"] for k in menu["kategori"]],
+        [k["manfaat"] for k in menu["kategori"]],
+    )
+    kategori = menu["kategori"][nomor - 1]
+
+    tampilkan_tabel(kategori["judul_tabel"], nama_pulau, per_pulau[nama_pulau],
+                    kategori["fungsi"], kategori["kolom_persen"], kategori["jenis"],
+                    kategori.get("kolom_status", "Status"))
+
+def menu_utama(per_pulau):
+    while True:
+        opsi_menu = []
+        for nomor, menu in DAFTAR_MENU.items():
+            opsi_menu.append((nomor, menu["judul"], menu["ikon"], menu["manfaat"]))
+        opsi_menu.append(("5", "Akhiri program", "👋", ""))
+        cetak_menu("ANALISIS KEMATANGAN PROSES PEMBELAJARAN TINGKAT SEKOLAH DASAR DI INDONESIA",
+                   "Data untuk keputusan pendidikan yang lebih baik", opsi_menu)
+
+        input_pengguna = input("  ➤ Silahkan ketik angka sesuai menu yg diinginkan: ").strip()
+
+        if input_pengguna in DAFTAR_MENU:
+            jalankan_menu(per_pulau, DAFTAR_MENU[input_pengguna])
+        elif input_pengguna == "5":
+            print("\n" + "─" * LEBAR)
+            print("  Program analisis kematangan proses pembelajaran tingkat sekolah dasar")
+            print("  di Indonesia telah selesai. Terima kasih telah menggunakan.")
+            print("─" * LEBAR)
+            break
+        else:
+            print("\n  ⚠  Pilihan tidak valid, silahkan ulangi.")
+            continue
+
+def main():
+    daftar_baris = baca_csv(FILE_CSV)
+    if daftar_baris is None:
+        return
+
+    data, data_invalid, jumlah_data_invalid = validasi_data(daftar_baris)
+    per_pulau = kelompokkan_per_pulau(data)
+
+    menu_utama(per_pulau)
+
+if __name__ == "__main__":
+    main()
