@@ -128,3 +128,149 @@ def hitung_persentase_fasilitas_perbaikan(baris):
         return persentase, "Kritis"
     else:
         return persentase, "Perlu perbaikan"
+
+def hitung_persentase_fasilitas_aman(baris):
+    total_kelas = baris["Ruang kelas(baik)"] + baris["Ruang kelas(rusak ringan)"] + baris["Ruang kelas(rusak sedang)"] + baris["Ruang kelas(rusak berat)"]
+    persentase = hitung_persen(baris["Ruang kelas(baik)"], total_kelas)
+    if persentase >= 80:
+        return persentase, "Baik"
+    else:
+        return persentase, "Cukup"
+
+def hitung_persentase_pemerataan(baris, kolom_atas, kolom_bawah):
+    atas = baris[kolom_atas]
+    persentase = hitung_persen(atas, atas + baris[kolom_bawah])
+    if persentase >= 80:
+        return persentase, "Tercapai"
+    else:
+        return persentase, "Perlu pemerataan"
+
+def tentukan_indikator_dominan(persentase_hasil, baris):
+
+    persentase_rusak, _ = hitung_persentase_fasilitas_perbaikan(baris)
+
+    guru_belum_s1 = baris["Kepala Sekolah dan Guru(<S1)"]
+    total_guru = guru_belum_s1 + baris["Kepala Sekolah dan Guru(≥ S1)"]
+    persentase_guru_belum_s1 = hitung_persen(guru_belum_s1, total_guru)
+
+    d1 = abs(persentase_hasil - persentase_rusak)
+    d2 = abs(persentase_hasil - persentase_guru_belum_s1)
+    if d1 > d2:
+        return "Fasilitas"
+    else:
+        return "Kualifikasi guru"
+
+def hitung_persentase_keberlanjutan(baris, kolom):
+    persentase = hitung_persen(baris[kolom], baris["Siswa"])
+    return persentase, tentukan_indikator_dominan(persentase, baris)
+
+LEBAR = 66
+
+def cetak_menu(judul, subjudul, daftar_opsi):
+    lebar_isi = LEBAR - 2
+
+    print("\n╔" + "═" * lebar_isi + "╗")
+    for teks in (judul, subjudul):
+        baris = ""
+        for kata in teks.split():
+            if baris == "":
+                baris = kata
+            elif len(baris) + 1 + len(kata) <= lebar_isi - 4:
+                baris = baris + " " + kata
+            else:
+                print("║" + baris.center(lebar_isi) + "║")
+                baris = kata
+        if baris != "":
+            print("║" + baris.center(lebar_isi) + "║")
+    print("╚" + "═" * lebar_isi + "╝\n")
+
+    for nomor, teks, ikon, keterangan in daftar_opsi:
+        print(f"  [{nomor}] {ikon} {teks}".rstrip())
+        if keterangan:
+            print(f"        ↳ {keterangan}")
+        print()
+
+    print("─" * LEBAR)
+
+def pilih_dari_daftar(judul, daftar_opsi, subjudul="", ikon_opsi=None, keterangan=None):
+    while True:
+        opsi_tampil = []
+        for indeks, opsi in enumerate(daftar_opsi):
+            ikon = ikon_opsi[indeks] if ikon_opsi else "▶"
+            ket = keterangan[indeks] if keterangan else ""
+            opsi_tampil.append((indeks + 1, opsi, ikon, ket))
+        cetak_menu(judul.upper(), subjudul, opsi_tampil)
+        pilihan = input("  ➤ Silahkan ketik angka yang diinginkan: ").strip()
+
+        if pilihan.isdigit() and 1 <= int(pilihan) <= len(daftar_opsi):
+            return int(pilihan)
+        print("\n  ⚠  Pilihan tidak valid, silahkan coba lagi.")
+
+INFO_PULAU = {
+    "Sumatera":             ("🐘", "Potensi yang beragam"),
+    "Jawa":                 ("🌋", "Dinamika yang berkembang"),
+    "Kalimantan":           ("🌳", "Luasnya peluang"),
+    "Sulawesi":             ("⛵", "Semangat kemajuan"),
+    "Bali & Nusa Tenggara": ("🏝", "Keberagaman potensi"),
+    "Maluku":               ("🌴", "Menembus keterbatasan"),
+    "Papua":                ("🦜", "Potensi masa depan"),
+}
+
+def pilih_pulau(per_pulau):
+    nama_pulau = [pulau for pulau in per_pulau if pulau != "Tidak diketahui"]
+    ikon = [INFO_PULAU.get(p, ("📍", ""))[0] for p in nama_pulau]
+    ket = [INFO_PULAU.get(p, ("📍", ""))[1] for p in nama_pulau]
+
+    nomor = pilih_dari_daftar("Pilih Wilayah Pulau", nama_pulau,
+                              "Data pulau yang ingin dilihat?", ikon, ket)
+    return nama_pulau[nomor - 1]
+
+def tampilkan_tabel(judul, nama_pulau, daftar, fungsi_hitung, judul_persen, jenis, judul_status="Status"):
+    hasil = []
+    for baris in daftar:
+        persentase, status = fungsi_hitung(baris)
+        hasil.append((persentase, baris["Provinsi"].replace("Prov. ", ""), status))
+
+    hasil.sort(reverse=True)
+
+    if jenis == "buruk":
+        keterangan = "diurutkan dari tingkas kelayakan terendah ke tertinggi"
+    else:
+        keterangan = "diurutkan dari tingkat kelayakan tertinggi ke terendah"
+
+    baris_tabel = [
+        (str(nomor), nama_provinsi, f"{persentase:.2f}%", status)
+        for nomor, (persentase, nama_provinsi, status) in enumerate(hasil, start=1)
+    ]
+
+    total_pulau = {"Provinsi": "TOTAL PULAU"}
+    for kolom in KOLOM_NUMERIK:
+        total_pulau[kolom] = sum(baris[kolom] for baris in daftar)
+    persentase, status = fungsi_hitung(total_pulau)
+    baris_tabel.append(("", "TOTAL PULAU", f"{persentase:.2f}%", status))
+    header = ("No.", "Provinsi", judul_persen, judul_status)
+    lebar_kolom = [5, 28, 22, len(judul_status)]
+    for baris in [header] + baris_tabel:
+        for indeks, nilai in enumerate(baris):
+            lebar_kolom[indeks] = max(lebar_kolom[indeks], len(nilai))
+
+    def format_baris(kolom, total=False):
+        pemisah = "  " if total else "| "
+        return (
+            f"| {kolom[0]:<{lebar_kolom[0]}} "
+            f"{pemisah}{kolom[1]:<{lebar_kolom[1]}} "
+            f"| {kolom[2]:>{lebar_kolom[2]}} "
+            f"| {kolom[3]:<{lebar_kolom[3]}} |"
+        )
+
+    garis = "-" * (sum(lebar_kolom) + 13)
+    print(f"\n=== {judul} - Pulau {nama_pulau} ===")
+    print(f"({keterangan})")
+    print(garis)
+    print(format_baris(header))
+    print(garis)
+    for baris in baris_tabel[:-1]:
+        print(format_baris(baris))
+    print(garis)
+    print(format_baris(baris_tabel[-1], total=True))
+    print(garis)
