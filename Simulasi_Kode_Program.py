@@ -115,7 +115,7 @@ def hitung_persentase_kelayakan_kelas(baris):
     total_kelas = baris["Ruang kelas(baik)"] + baris["Ruang kelas(rusak ringan)"] + baris["Ruang kelas(rusak sedang)"] + baris["Ruang kelas(rusak berat)"]
     persentase = hitung_persen(baris["Ruang kelas(baik)"], total_kelas)
 
-    if persentase >= 100:
+    if persentase >= 80:
         return persentase, "Baik"
     elif persentase >= 40:
         return persentase, "Kurang"
@@ -129,7 +129,7 @@ def hitung_persentase_kualitas_guru_tenaga(baris):
              + baris["Tenaga Kependidikan(SM)"] + tenaga_diatas_sm)
 
     persentase = hitung_persen(guru_s1 + tenaga_diatas_sm, total)
-    if persentase >= 100:
+    if persentase >= 80:
         return persentase, "Tinggi"
     elif persentase >= 75:
         return persentase, "Sedang"
@@ -141,7 +141,7 @@ def hitung_persentase_fasilitas_perbaikan(baris):
     ruang_kelas_rusak = total_kelas - baris["Ruang kelas(baik)"]
 
     persentase = hitung_persen(ruang_kelas_rusak, total_kelas)
-    if persentase >= 100:
+    if persentase >= 62:
         return persentase, "Kritis"
     else:
         return persentase, "Perlu perbaikan"
@@ -149,7 +149,7 @@ def hitung_persentase_fasilitas_perbaikan(baris):
 def hitung_persentase_fasilitas_aman(baris):
     total_kelas = baris["Ruang kelas(baik)"] + baris["Ruang kelas(rusak ringan)"] + baris["Ruang kelas(rusak sedang)"] + baris["Ruang kelas(rusak berat)"]
     persentase = hitung_persen(baris["Ruang kelas(baik)"], total_kelas)
-    if persentase >= 100:
+    if persentase >= 80:
         return persentase, "Baik"
     else:
         return persentase, "Cukup"
@@ -157,7 +157,7 @@ def hitung_persentase_fasilitas_aman(baris):
 def hitung_persentase_pemerataan(baris, kolom_atas, kolom_bawah):
     atas = baris[kolom_atas]
     persentase = hitung_persen(atas, atas + baris[kolom_bawah])
-    if persentase >= 100:
+    if persentase >= 80:
         return persentase, "Tercapai"
     else:
         return persentase, "Perlu pemerataan"
