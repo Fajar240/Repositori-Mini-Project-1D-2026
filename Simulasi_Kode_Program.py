@@ -145,7 +145,7 @@ def hitung_persentase_pemerataan(baris, kolom_atas, kolom_bawah):
     else:
         return persentase, "Perlu pemerataan"
 
-def tentukan_indikator_dominan(persentase_hasil, baris):
+def tentukan_indikator_dominan(persentase, baris):
 
     persentase_rusak, _ = hitung_persentase_fasilitas_perbaikan(baris)
 
@@ -153,8 +153,8 @@ def tentukan_indikator_dominan(persentase_hasil, baris):
     total_guru = guru_belum_s1 + baris["Kepala Sekolah dan Guru(≥ S1)"]
     persentase_guru_belum_s1 = hitung_persen(guru_belum_s1, total_guru)
 
-    d1 = abs(persentase_hasil - persentase_rusak)
-    d2 = abs(persentase_hasil - persentase_guru_belum_s1)
+    d1 = abs(persentase - persentase_rusak)
+    d2 = abs(persentase - persentase_guru_belum_s1)
     if d1 > d2:
         return "Fasilitas"
     else:
