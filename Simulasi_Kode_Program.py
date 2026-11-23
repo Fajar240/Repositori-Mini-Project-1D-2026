@@ -52,10 +52,27 @@ def validasi_data(daftar_baris):
                 baris_baru[kolom] = nilai
 
         if masalah:
-            print(f"Peringatan baris {nomor_baris}: {masalah}")
-            data_invalid.append(baris)
+            data_invalid.append({"nomor_baris": nomor_baris, "kolom": kolom_bermasalah, "keterangan": masalah,})
         else:
             data.append(baris_baru)
+
+    if data_invalid:
+        header = ("Baris", "Kolom", "Keterangan")
+        data_tabel = [ (str(item["nomor_baris"]), item["kolom"], item["keterangan"]) for item in data_invalid ]
+        lebar = [ max(len(header[indeks]), *(len(item[indeks]) for item in data_tabel)) for indeks in range(len(header)) ]
+
+        garis = "--" + "---".join("-" * lebar[indeks] for indeks in range(len(lebar))) + "--"
+
+        print("\n=== DATA TIDAK VALID ===")
+        print(garis)
+        print("| " + " | ".join(f"{nilai:<{lebar[indeks]}}" for indeks, nilai in enumerate(header)) + " |")
+        print(garis)
+
+        for item in data_tabel:
+            print("| " + " | ".join(f"{nilai:<{lebar[indeks]}}" for indeks, nilai in enumerate(item)) + " |")
+
+        print(garis)
+        print(f"Jumlah data tidak valid: {len(data_invalid)} baris")
 
     return data, data_invalid, len(data_invalid)
 
@@ -98,9 +115,9 @@ def hitung_persentase_kelayakan_kelas(baris):
     total_kelas = baris["Ruang kelas(baik)"] + baris["Ruang kelas(rusak ringan)"] + baris["Ruang kelas(rusak sedang)"] + baris["Ruang kelas(rusak berat)"]
     persentase = hitung_persen(baris["Ruang kelas(baik)"], total_kelas)
 
-    if persentase >= 80:
+    if persentase >= 100:
         return persentase, "Baik"
-    elif persentase >= 60:
+    elif persentase >= 40:
         return persentase, "Kurang"
     else:
         return persentase, "Buruk"
@@ -112,9 +129,9 @@ def hitung_persentase_kualitas_guru_tenaga(baris):
              + baris["Tenaga Kependidikan(SM)"] + tenaga_diatas_sm)
 
     persentase = hitung_persen(guru_s1 + tenaga_diatas_sm, total)
-    if persentase >= 80:
+    if persentase >= 100:
         return persentase, "Tinggi"
-    elif persentase >= 60:
+    elif persentase >= 75:
         return persentase, "Sedang"
     else:
         return persentase, "Rendah"
@@ -124,7 +141,7 @@ def hitung_persentase_fasilitas_perbaikan(baris):
     ruang_kelas_rusak = total_kelas - baris["Ruang kelas(baik)"]
 
     persentase = hitung_persen(ruang_kelas_rusak, total_kelas)
-    if persentase >= 70:
+    if persentase >= 100:
         return persentase, "Kritis"
     else:
         return persentase, "Perlu perbaikan"
@@ -132,7 +149,7 @@ def hitung_persentase_fasilitas_perbaikan(baris):
 def hitung_persentase_fasilitas_aman(baris):
     total_kelas = baris["Ruang kelas(baik)"] + baris["Ruang kelas(rusak ringan)"] + baris["Ruang kelas(rusak sedang)"] + baris["Ruang kelas(rusak berat)"]
     persentase = hitung_persen(baris["Ruang kelas(baik)"], total_kelas)
-    if persentase >= 80:
+    if persentase >= 100:
         return persentase, "Baik"
     else:
         return persentase, "Cukup"
@@ -140,7 +157,7 @@ def hitung_persentase_fasilitas_aman(baris):
 def hitung_persentase_pemerataan(baris, kolom_atas, kolom_bawah):
     atas = baris[kolom_atas]
     persentase = hitung_persen(atas, atas + baris[kolom_bawah])
-    if persentase >= 80:
+    if persentase >= 100:
         return persentase, "Tercapai"
     else:
         return persentase, "Perlu pemerataan"
@@ -234,7 +251,7 @@ def tampilkan_tabel(judul, nama_pulau, daftar, fungsi_hitung, judul_persen, jeni
     hasil.sort(reverse=True)
 
     if jenis == "buruk":
-        keterangan = "diurutkan dari tingkas kelayakan terendah ke tertinggi"
+        keterangan = "diurutkan dari tingkat kelayakan terendah ke tertinggi"
     else:
         keterangan = "diurutkan dari tingkat kelayakan tertinggi ke terendah"
 
