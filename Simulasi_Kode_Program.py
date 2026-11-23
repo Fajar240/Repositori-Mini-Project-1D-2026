@@ -40,13 +40,13 @@ def validasi_data(daftar_baris):
             nilai = (baris.get(kolom) or "").strip()
 
             if not nilai:
-                masalah = f"kolom '{kolom}' kosong."
+                masalah = f"kolom kosong."
                 break
             elif kolom in KOLOM_NUMERIK:
                 try:
                     baris_baru[kolom] = int(nilai)
                 except ValueError:
-                    masalah = f"kolom '{kolom}' bukan data valid."
+                    masalah = f"bukan data valid."
                     break
             else:
                 baris_baru[kolom] = nilai
