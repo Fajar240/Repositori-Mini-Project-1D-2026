@@ -34,31 +34,53 @@ def validasi_data(daftar_baris):
 
     for nomor_baris, baris in enumerate(daftar_baris, start=2):
         baris_baru = {}
-        masalah = None
+        masalah_baris = []
 
         for kolom in KOLOM_WAJIB:
             nilai = (baris.get(kolom) or "").strip()
 
             if not nilai:
-                masalah = f"kolom kosong."
-                break
+                masalah_baris.append((kolom, "kolom kosong"))
+                if kolom in KOLOM_NUMERIK:
+                    baris_baru[kolom] = 0
             elif kolom in KOLOM_NUMERIK:
                 try:
                     baris_baru[kolom] = int(nilai)
                 except ValueError:
-                    masalah = f"bukan data valid."
-                    break
+                    masalah_baris.append((kolom, "bukan data valid"))
+                    baris_baru[kolom] = 0
             else:
                 baris_baru[kolom] = nilai
 
-        if masalah:
-            data_invalid.append({"nomor_baris": nomor_baris, "kolom": kolom_bermasalah, "keterangan": masalah,})
-        else:
+        if masalah_baris:
+            for kolom, keterangan in masalah_baris:
+                data_invalid.append({
+                    "nomor_baris": nomor_baris,
+                    "kolom": kolom,
+                    "keterangan": keterangan,
+                })
+
+        if baris_baru.get("Provinsi"):
             data.append(baris_baru)
 
     if data_invalid:
-        header = ("Baris", "Kolom", "Keterangan")
-        data_tabel = [ (str(item["nomor_baris"]), item["kolom"], item["keterangan"]) for item in data_invalid ]
+        masalah_per_baris = {}
+        for item in data_invalid:
+            masalah_per_baris.setdefault(item["nomor_baris"], []).append(
+                (item["kolom"], item["keterangan"])
+            )
+
+        header = ("No.", "Baris", "Kolom", "Keterangan")
+        data_tabel = [
+            (
+                str(nomor),
+                str(nomor_baris),
+                ", ".join(kolom for kolom, _ in masalah),
+                ", ".join(keterangan for _, keterangan in masalah),
+            )
+            for nomor, (nomor_baris, masalah) in enumerate(masalah_per_baris.items(), start=1)
+        ]
+
         lebar = [ max(len(header[indeks]), *(len(item[indeks]) for item in data_tabel)) for indeks in range(len(header)) ]
 
         garis = "--" + "---".join("-" * lebar[indeks] for indeks in range(len(lebar))) + "--"
@@ -72,9 +94,11 @@ def validasi_data(daftar_baris):
             print("| " + " | ".join(f"{nilai:<{lebar[indeks]}}" for indeks, nilai in enumerate(item)) + " |")
 
         print(garis)
-        print(f"Jumlah data tidak valid: {len(data_invalid)} baris")
+        jumlah_baris_invalid = len({item["nomor_baris"] for item in data_invalid})
+        print(f"Jumlah data tidak valid: {jumlah_baris_invalid} baris")
 
-    return data, data_invalid, len(data_invalid)
+    jumlah_baris_invalid = len({item["nomor_baris"] for item in data_invalid})
+    return data, data_invalid, jumlah_baris_invalid
 
 def kelompokkan_per_pulau(data):
     pulau_provinsi = {
